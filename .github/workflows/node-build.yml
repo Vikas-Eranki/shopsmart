@@ -34,7 +34,3 @@ jobs:
       - name: Install server dependencies
         working-directory: server
         run: npm ci
-
-      - name: Build server
-        working-directory: server
-        run: npm run build
