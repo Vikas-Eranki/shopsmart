@@ -5,3 +5,9 @@ dist
 build
 coverage
 .vercel
+
+# Playwright
+/client/test-results/
+/client/playwright-report/
+/client/blob-report/
+/client/playwright/.cache/

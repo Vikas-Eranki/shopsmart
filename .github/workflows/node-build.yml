@@ -1,11 +1,11 @@
-name: Node.js Build
+name: Node.js Build & Test
 
 on:
   push:
   pull_request:
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -29,6 +29,22 @@ jobs:
       - name: Build client
         working-directory: client
         run: npm run build
+
+      - name: Run client unit tests
+        working-directory: client
+        run: npm run test:unit
+
+      - name: Run client integration tests
+        working-directory: client
+        run: npm run test:integration
+
+      - name: Install Playwright browsers
+        working-directory: client
+        run: npx playwright install --with-deps chromium
+
+      - name: Run client E2E tests
+        working-directory: client
+        run: npm run test:e2e
 
       # ---------- SERVER ----------
       - name: Install server dependencies
