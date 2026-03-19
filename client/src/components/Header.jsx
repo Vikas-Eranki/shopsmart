@@ -45,9 +45,9 @@ function Header({ cartCount, onCartClick, onSearch }) {
               )}
             </div>
 
-            <button className="btn btn-primary" style={{ padding: '9px 18px', fontSize: '13px' }}>
-              {/* Sign In */}
-            </button>
+            {/* <button className="btn btn-primary" style={{ padding: '9px 18px', fontSize: '13px' }}>
+              Sign In
+            </button> */}
           </div>
         </div>
       </div>
