@@ -1,113 +1,107 @@
 // @ts-check
 import { test, expect } from '@playwright/test';
 
-const MOCK_HEALTH_RESPONSE = {
-    status: 'ok',
-    message: 'ShopSmart Backend is running',
-    timestamp: '2024-06-15T10:30:00Z',
-};
+const MOCK_PRODUCTS = [
+    { id: 1, name: 'Wireless Headphones', category: 'Electronics', price: 7999, originalPrice: 9999, rating: 4.7, reviews: 100, badge: 'Best Seller', image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&q=80', inStock: true },
+    { id: 2, name: 'Leather Sneakers', category: 'Fashion', price: 4999, originalPrice: 6999, rating: 4.8, reviews: 200, badge: 'Hot', image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80', inStock: true },
+];
 
 test.describe('ShopSmart E2E Tests', () => {
-    // Test 1
-    test('homepage loads and shows title "ShopSmart"', async ({ page }) => {
-        await page.route('**/api/health', (route) =>
-            route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_HEALTH_RESPONSE) })
+    test.beforeEach(async ({ page }) => {
+        await page.route('**/api/products**', (route) =>
+            route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_PRODUCTS) })
         );
+        await page.route('**/api/categories', (route) =>
+            route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(['All', 'Electronics', 'Fashion', 'Lifestyle', 'Home']) })
+        );
+        await page.route('**/api/checkout', (route) =>
+            route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, orderId: 'ORD-TEST-123', total: 7999, items: [] }) })
+        );
+    });
+
+    // Test 1
+    test('homepage loads with ShopSmart branding', async ({ page }) => {
         await page.goto('/');
-        await expect(page.locator('h1')).toHaveText('ShopSmart');
+        await expect(page.locator('text=ShopSmart').first()).toBeVisible();
     });
 
     // Test 2
-    test('health status displays after page load', async ({ page }) => {
-        await page.route('**/api/health', (route) =>
-            route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_HEALTH_RESPONSE) })
-        );
+    test('hero section is visible with a CTA button', async ({ page }) => {
         await page.goto('/');
-        await expect(page.locator('.status-ok')).toHaveText('ok');
-        await expect(page.getByText('ShopSmart Backend is running')).toBeVisible();
+        await expect(page.getByTestId('hero-section')).toBeVisible();
+        await expect(page.getByTestId('hero-cta-btn')).toBeVisible();
     });
 
     // Test 3
-    test('page shows loading state then data', async ({ page }) => {
-        await page.route('**/api/health', async (route) => {
-            await new Promise((r) => setTimeout(r, 500));
-            await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_HEALTH_RESPONSE) });
-        });
+    test('product cards render after page load', async ({ page }) => {
         await page.goto('/');
-        // Should show loading initially
-        await expect(page.getByText('Loading backend status...')).toBeVisible();
-        // Then data should appear
-        await expect(page.locator('.status-ok')).toBeVisible({ timeout: 5000 });
+        await expect(page.getByTestId('product-card').first()).toBeVisible({ timeout: 8000 });
+        const cards = await page.getByTestId('product-card').count();
+        expect(cards).toBeGreaterThan(0);
     });
 
     // Test 4
-    test('handles backend failure — app still renders', async ({ page }) => {
-        await page.route('**/api/health', (route) =>
-            route.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ error: 'Internal Server Error' }) })
-        );
+    test('category section exists and shows category buttons', async ({ page }) => {
         await page.goto('/');
-        // App should still render, showing at least the title
-        await expect(page.locator('h1')).toHaveText('ShopSmart');
-        // Health data should NOT appear
-        await expect(page.locator('.status-ok')).not.toBeVisible();
+        await expect(page.getByTestId('category-section')).toBeVisible();
+        await expect(page.getByTestId('category-all')).toBeVisible();
     });
 
     // Test 5
-    test('page title tag is "ShopSmart"', async ({ page }) => {
-        await page.route('**/api/health', (route) =>
-            route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_HEALTH_RESPONSE) })
-        );
+    test('add to cart shows badge on cart icon', async ({ page }) => {
         await page.goto('/');
-        await expect(page).toHaveTitle('ShopSmart');
+        await expect(page.getByTestId('product-card').first()).toBeVisible({ timeout: 8000 });
+        await page.getByTestId('add-to-cart-btn').first().click();
+        await expect(page.getByTestId('cart-badge')).toBeVisible({ timeout: 3000 });
+        await expect(page.getByTestId('cart-badge')).toHaveText('1');
     });
 
     // Test 6
-    test('container element has class "container"', async ({ page }) => {
-        await page.route('**/api/health', (route) =>
-            route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_HEALTH_RESPONSE) })
-        );
+    test('clicking cart icon opens the cart drawer', async ({ page }) => {
         await page.goto('/');
-        await expect(page.locator('.container')).toBeVisible();
+        await page.getByTestId('cart-icon-btn').click();
+        await expect(page.getByTestId('cart-drawer')).toBeVisible();
     });
 
     // Test 7
-    test('status text shows "ok" for healthy backend', async ({ page }) => {
-        await page.route('**/api/health', (route) =>
-            route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_HEALTH_RESPONSE) })
-        );
+    test('empty cart shows empty state message', async ({ page }) => {
         await page.goto('/');
-        await expect(page.getByText('Status:')).toBeVisible();
-        await expect(page.locator('.status-ok')).toHaveText('ok');
+        await page.getByTestId('cart-icon-btn').click();
+        await expect(page.getByTestId('cart-empty')).toBeVisible();
     });
 
-    // Test 8
-    test('HMR hint text is visible', async ({ page }) => {
-        await page.route('**/api/health', (route) =>
-            route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_HEALTH_RESPONSE) })
-        );
+    // Test 8: Full user flow — browse → add to cart → open drawer → checkout
+    test('full flow: add to cart → open cart → proceed to checkout', async ({ page }) => {
         await page.goto('/');
-        await expect(page.locator('.hint')).toBeVisible();
-        await expect(page.getByText('src/App.jsx')).toBeVisible();
+        // Wait for products
+        await expect(page.getByTestId('product-card').first()).toBeVisible({ timeout: 8000 });
+        // Add to cart
+        await page.getByTestId('add-to-cart-btn').first().click();
+        // Open cart
+        await page.getByTestId('cart-icon-btn').click();
+        await expect(page.getByTestId('cart-drawer')).toBeVisible();
+        // Proceed to checkout
+        await page.getByTestId('checkout-btn').click();
+        await expect(page.getByTestId('checkout-modal')).toBeVisible();
+        // Should show step 0 (cart review)
+        await expect(page.getByTestId('step-cart-review')).toBeVisible();
     });
 
     // Test 9
-    test('timestamp renders from API response', async ({ page }) => {
-        await page.route('**/api/health', (route) =>
-            route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_HEALTH_RESPONSE) })
-        );
+    test('checkout flow: cart review → shipping form', async ({ page }) => {
         await page.goto('/');
-        await expect(page.getByText('2024-06-15T10:30:00Z')).toBeVisible();
+        await expect(page.getByTestId('product-card').first()).toBeVisible({ timeout: 8000 });
+        await page.getByTestId('add-to-cart-btn').first().click();
+        await page.getByTestId('cart-icon-btn').click();
+        await page.getByTestId('checkout-btn').click();
+        // Click continue to shipping
+        await page.getByTestId('next-to-shipping-btn').click();
+        await expect(page.getByTestId('step-shipping')).toBeVisible();
     });
 
     // Test 10
-    test('page has correct structure (h1, card, hint)', async ({ page }) => {
-        await page.route('**/api/health', (route) =>
-            route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_HEALTH_RESPONSE) })
-        );
+    test('page title is ShopSmart', async ({ page }) => {
         await page.goto('/');
-        await expect(page.locator('h1')).toHaveCount(1);
-        await expect(page.locator('.card')).toHaveCount(1);
-        await expect(page.locator('.hint')).toHaveCount(1);
-        await expect(page.locator('h2')).toHaveText('Backend Status');
+        await expect(page).toHaveTitle('ShopSmart');
     });
 });

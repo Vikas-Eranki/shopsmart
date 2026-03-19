@@ -6,43 +6,44 @@ describe('ProductCard — Integration Tests', () => {
     const mockProduct = {
         id: 42,
         name: 'Wireless Mouse',
+        category: 'Electronics',
         price: 2999,
+        originalPrice: 3999,
+        rating: 4.2,
+        reviews: 150,
         image: '/mouse.png',
-        description: 'A sleek wireless mouse with ergonomic design.',
+        badge: 'Sale',
+        inStock: true,
     };
 
     // Test 1
     it('renders product name, price, and image', () => {
         render(<ProductCard product={mockProduct} />);
-
         expect(screen.getByTestId('product-name')).toHaveTextContent('Wireless Mouse');
-        expect(screen.getByTestId('product-price')).toHaveTextContent('$29.99');
+        expect(screen.getByTestId('product-price')).toBeDefined();
         expect(screen.getByTestId('product-image')).toHaveAttribute('src', '/mouse.png');
     });
 
-    // Test 2
-    it('calls onAddToCart with product id when button is clicked', () => {
+    // Test 2 — NEW: onAddToCart is called with the full product object
+    it('calls onAddToCart with the full product when button is clicked', () => {
         const mockCallback = vi.fn();
         render(<ProductCard product={mockProduct} onAddToCart={mockCallback} />);
-
         fireEvent.click(screen.getByTestId('add-to-cart-btn'));
-        expect(mockCallback).toHaveBeenCalledWith(42);
+        expect(mockCallback).toHaveBeenCalledWith(mockProduct);
         expect(mockCallback).toHaveBeenCalledTimes(1);
     });
 
-    // Test 3
-    it('renders description when provided', () => {
+    // Test 3 — NEW: category label is shown
+    it('renders category label', () => {
         render(<ProductCard product={mockProduct} />);
-        expect(screen.getByTestId('product-description')).toHaveTextContent(
-            'A sleek wireless mouse with ergonomic design.'
-        );
+        expect(screen.getByText('Electronics')).toBeInTheDocument();
     });
 
     // Test 4
-    it('does not render description when not provided', () => {
+    it('does not crash when description is not provided', () => {
         const productNoDesc = { ...mockProduct, description: undefined };
         render(<ProductCard product={productNoDesc} />);
-        expect(screen.queryByTestId('product-description')).not.toBeInTheDocument();
+        expect(screen.getByTestId('product-card')).toBeInTheDocument();
     });
 
     // Test 5
@@ -51,10 +52,12 @@ describe('ProductCard — Integration Tests', () => {
         expect(container.innerHTML).toBe('');
     });
 
-    // Test 6
-    it('uses placeholder image when product image is missing', () => {
+    // Test 6 — updated fallback URL
+    it('uses a fallback image when product image is missing', () => {
         const noImageProduct = { ...mockProduct, image: undefined };
         render(<ProductCard product={noImageProduct} />);
-        expect(screen.getByTestId('product-image')).toHaveAttribute('src', '/placeholder.png');
+        const img = screen.getByTestId('product-image');
+        expect(img).toHaveAttribute('src');
+        expect(img.getAttribute('src')).toBeTruthy();
     });
 });

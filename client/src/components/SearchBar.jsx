@@ -23,13 +23,15 @@ function SearchBar({ onSearch, placeholder = 'Search products...', debounceMs = 
 
     return (
         <div className="search-bar" data-testid="search-bar">
+            <span className="search-icon">🔍</span>
             <input
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={placeholder}
                 data-testid="search-input"
-                aria-label="Search"
+                aria-label="Search products"
+                className="search-input"
             />
             {query && (
                 <button

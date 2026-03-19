@@ -1,52 +1,24 @@
-name: Node.js Build & Test
+# ⚠️  DEPRECATED — This file has been split into:
+#
+#   frontend.yml  — Frontend CI: lint, format-check, unit, integration, E2E, build
+#   backend.yml   — Backend CI:  lint, format-check, API tests (Jest + supertest)
+#   pr-checks.yml — PR Gates:    lint + format-check for both client and server
+#
+# This file is kept only as a reference and is intentionally NOT triggered.
+# Delete this file once the team has confirmed the new workflows are working.
+
+name: _DEPRECATED_node-build
 
 on:
-  push:
-  pull_request:
+  workflow_dispatch: # manual trigger only — not automatic
 
 jobs:
-  build-and-test:
+  deprecated-notice:
+    name: "⚠️ This workflow is deprecated"
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: "npm"
-          cache-dependency-path: |
-            client/package-lock.json
-            server/package-lock.json
-
-      # ---------- CLIENT ----------
-      - name: Install client dependencies
-        working-directory: client
-        run: npm ci
-
-      - name: Build client
-        working-directory: client
-        run: npm run build
-
-      - name: Run client unit tests
-        working-directory: client
-        run: npm run test:unit
-
-      - name: Run client integration tests
-        working-directory: client
-        run: npm run test:integration
-
-      - name: Install Playwright browsers
-        working-directory: client
-        run: npx playwright install --with-deps chromium
-
-      - name: Run client E2E tests
-        working-directory: client
-        run: npm run test:e2e
-
-      # ---------- SERVER ----------
-      - name: Install server dependencies
-        working-directory: server
-        run: npm ci
+      - name: Notice
+        run: |
+          echo "This workflow has been replaced."
+          echo "See frontend.yml, backend.yml, and pr-checks.yml instead."
+          exit 1
