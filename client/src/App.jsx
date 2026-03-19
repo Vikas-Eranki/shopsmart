@@ -9,9 +9,8 @@ import CartDrawer from './components/CartDrawer';
 import CheckoutModal from './components/CheckoutModal';
 import Footer from './components/Footer';
 import SearchBar from './components/SearchBar';
-import { fetchProducts, checkout as checkoutApi } from './utils/api';
+import { checkout as checkoutApi } from './utils/api';
 import { addItem, removeItem } from './utils/cartUtils';
-import { formatPrice } from './utils/formatters';
 
 const TESTIMONIALS = [
   {
@@ -76,7 +75,6 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('default');
   const [toasts, setToasts] = useState([]);
-  const [orderSuccess, setOrderSuccess] = useState(false);
 
   const showToast = useCallback((message, type = 'success') => {
     const id = Date.now();
@@ -149,21 +147,18 @@ function App() {
     try {
       const res = await checkoutApi(cartItems);
       setCart([]);
-      setOrderSuccess(true);
       showToast('Order placed successfully! 🎉');
       return res.orderId;
     } catch {
       // fallback — generate local order ID
       const id = `ORD-${Date.now()}`;
       setCart([]);
-      setOrderSuccess(true);
       return id;
     }
   };
 
   const handleCheckoutClose = () => {
     setCheckoutOpen(false);
-    setOrderSuccess(false);
   };
 
   const scrollToProducts = () => {
@@ -250,7 +245,7 @@ function App() {
           <div className="promo-banner" data-testid="promo-banner">
             <div>
               <h2 className="promo-title">Summer Sale — Up to 40% Off 🌞</h2>
-              <p className="promo-sub">Limited time. Shop your favourites before they're gone.</p>
+              <p className="promo-sub">Limited time. Shop your favourites before they&apos;re gone.</p>
             </div>
             <button className="btn btn-light" onClick={scrollToProducts}>
               Shop the Sale →
@@ -268,7 +263,7 @@ function App() {
             {TESTIMONIALS.map((t) => (
               <div key={t.name} className="testimonial-card">
                 <div className="testimonial-stars">{'★'.repeat(t.rating)}</div>
-                <p className="testimonial-text">"{t.text}"</p>
+                <p className="testimonial-text">&quot;{t.text}&quot;</p>
                 <div className="testimonial-author">
                   <div className="author-avatar">{t.initial}</div>
                   <div>
