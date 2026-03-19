@@ -26,7 +26,7 @@ module.exports = {
     'react/prop-types': 'off',
     'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
     'no-console': 'warn',
-    'eqeqeq': ['error', 'always'],
+    eqeqeq: ['error', 'always'],
     'prefer-const': 'error',
     'no-var': 'error',
   },
