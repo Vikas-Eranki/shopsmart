@@ -245,7 +245,9 @@ function App() {
           <div className="promo-banner" data-testid="promo-banner">
             <div>
               <h2 className="promo-title">Summer Sale — Up to 40% Off 🌞</h2>
-              <p className="promo-sub">Limited time. Shop your favourites before they&apos;re gone.</p>
+              <p className="promo-sub">
+                Limited time. Shop your favourites before they&apos;re gone.
+              </p>
             </div>
             <button className="btn btn-light" onClick={scrollToProducts}>
               Shop the Sale →
