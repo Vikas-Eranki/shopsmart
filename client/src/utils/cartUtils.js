@@ -5,13 +5,11 @@
  * @returns {Array}
  */
 export function addItem(cart, item) {
-    const existing = cart.find((i) => i.id === item.id);
-    if (existing) {
-        return cart.map((i) =>
-            i.id === item.id ? { ...i, qty: i.qty + (item.qty || 1) } : i
-        );
-    }
-    return [...cart, { ...item, qty: item.qty || 1 }];
+  const existing = cart.find((i) => i.id === item.id);
+  if (existing) {
+    return cart.map((i) => (i.id === item.id ? { ...i, qty: i.qty + (item.qty || 1) } : i));
+  }
+  return [...cart, { ...item, qty: item.qty || 1 }];
 }
 
 /**
@@ -21,7 +19,7 @@ export function addItem(cart, item) {
  * @returns {Array}
  */
 export function removeItem(cart, id) {
-    return cart.filter((i) => i.id !== id);
+  return cart.filter((i) => i.id !== id);
 }
 
 /**
@@ -30,7 +28,7 @@ export function removeItem(cart, id) {
  * @returns {number}
  */
 export function getTotal(cart) {
-    return cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+  return cart.reduce((sum, item) => sum + item.price * item.qty, 0);
 }
 
 /**
@@ -39,7 +37,7 @@ export function getTotal(cart) {
  * @returns {number}
  */
 export function getItemCount(cart) {
-    return cart.reduce((sum, item) => sum + item.qty, 0);
+  return cart.reduce((sum, item) => sum + item.qty, 0);
 }
 
 /**
@@ -50,17 +48,17 @@ export function getItemCount(cart) {
  * @returns {{ total: number, discount: number, finalTotal: number }}
  */
 export function applyDiscount(cart, code) {
-    const total = getTotal(cart);
-    const discounts = {
-        SAVE10: 10,
-        SAVE20: 20,
-        HALF: 50,
-    };
-    const percent = discounts[code?.toUpperCase()] || 0;
-    const discount = Math.round(total * (percent / 100));
-    return {
-        total,
-        discount,
-        finalTotal: total - discount,
-    };
+  const total = getTotal(cart);
+  const discounts = {
+    SAVE10: 10,
+    SAVE20: 20,
+    HALF: 50,
+  };
+  const percent = discounts[code?.toUpperCase()] || 0;
+  const discount = Math.round(total * (percent / 100));
+  return {
+    total,
+    discount,
+    finalTotal: total - discount,
+  };
 }

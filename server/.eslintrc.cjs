@@ -12,10 +12,10 @@ module.exports = {
   rules: {
     'no-console': 'warn',
     'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-    'eqeqeq': ['error', 'always'],
+    eqeqeq: ['error', 'always'],
     'prefer-const': 'error',
     'no-var': 'error',
-    'semi': ['error', 'always'],
-    'quotes': ['error', 'single', { avoidEscape: true }],
+    semi: ['error', 'always'],
+    quotes: ['error', 'single', { avoidEscape: true }],
   },
 };

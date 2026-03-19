@@ -8,7 +8,8 @@ const products = [
     originalPrice: 9999,
     rating: 4.7,
     reviews: 1284,
-    description: 'Premium over-ear headphones with 30-hour battery life and active noise cancellation.',
+    description:
+      'Premium over-ear headphones with 30-hour battery life and active noise cancellation.',
     image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&q=80',
     badge: 'Best Seller',
     inStock: true,
@@ -47,7 +48,8 @@ const products = [
     originalPrice: 6499,
     rating: 4.6,
     reviews: 512,
-    description: 'TKL layout, RGB backlit, Red switches. Satisfying tactile feedback for every keystroke.',
+    description:
+      'TKL layout, RGB backlit, Red switches. Satisfying tactile feedback for every keystroke.',
     image: 'https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?w=400&q=80',
     badge: null,
     inStock: true,
@@ -60,7 +62,8 @@ const products = [
     originalPrice: 2999,
     rating: 4.4,
     reviews: 389,
-    description: 'HDMI 4K, 3× USB 3.0, SD card, Ethernet, and 100W PD charging all in one slim hub.',
+    description:
+      'HDMI 4K, 3× USB 3.0, SD card, Ethernet, and 100W PD charging all in one slim hub.',
     image: 'https://images.unsplash.com/photo-1625831840428-b2f9d4062f18?w=400&q=80',
     badge: null,
     inStock: true,
@@ -88,7 +91,7 @@ const products = [
     originalPrice: 2499,
     rating: 4.5,
     reviews: 934,
-    description: '100% organic cotton, brushed fleece lining. The softest hoodie you\'ll ever wear.',
+    description: "100% organic cotton, brushed fleece lining. The softest hoodie you'll ever wear.",
     image: 'https://images.unsplash.com/photo-1556821840-3a63f15732ce?w=400&q=80',
     badge: null,
     inStock: true,
@@ -127,7 +130,8 @@ const products = [
     originalPrice: 1299,
     rating: 4.4,
     reviews: 487,
-    description: 'Heavy-duty 12oz canvas, reinforced handles, interior zip pocket. Carry everything.',
+    description:
+      'Heavy-duty 12oz canvas, reinforced handles, interior zip pocket. Carry everything.',
     image: 'https://images.unsplash.com/photo-1591561954557-26941169b49e?w=400&q=80',
     badge: null,
     inStock: true,
@@ -155,7 +159,8 @@ const products = [
     originalPrice: 2499,
     rating: 4.5,
     reviews: 892,
-    description: 'Non-slip textured surface, alignment lines, carry strap included. Eco-friendly TPE.',
+    description:
+      'Non-slip textured surface, alignment lines, carry strap included. Eco-friendly TPE.',
     image: 'https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?w=400&q=80',
     badge: null,
     inStock: true,
@@ -168,7 +173,8 @@ const products = [
     originalPrice: 3299,
     rating: 4.4,
     reviews: 634,
-    description: '500ml ultrasonic diffuser with 7-colour LED, timer, and auto-shutoff. Silent operation.',
+    description:
+      '500ml ultrasonic diffuser with 7-colour LED, timer, and auto-shutoff. Silent operation.',
     image: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=400&q=80',
     badge: 'New',
     inStock: true,
@@ -194,7 +200,8 @@ const products = [
     originalPrice: 1899,
     rating: 4.6,
     reviews: 748,
-    description: 'Set of 3 hand-poured soy candles — Vanilla, Amber & Cedar, Ocean Breeze. 40h burn each.',
+    description:
+      'Set of 3 hand-poured soy candles — Vanilla, Amber & Cedar, Ocean Breeze. 40h burn each.',
     image: 'https://images.unsplash.com/photo-1603006905003-be475563bc59?w=400&q=80',
     badge: 'Sale',
     inStock: true,
@@ -209,7 +216,8 @@ const products = [
     originalPrice: 3499,
     rating: 4.9,
     reviews: 576,
-    description: 'Handmade ceramic dripper, glass carafe & stainless steel gooseneck kettle. Brew like a pro.',
+    description:
+      'Handmade ceramic dripper, glass carafe & stainless steel gooseneck kettle. Brew like a pro.',
     image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&q=80',
     badge: 'Best Seller',
     inStock: true,
@@ -222,7 +230,8 @@ const products = [
     originalPrice: 4199,
     rating: 4.5,
     reviews: 481,
-    description: '5 colour modes, 10-level dimming, wireless charging base, USB-A port. Touch control.',
+    description:
+      '5 colour modes, 10-level dimming, wireless charging base, USB-A port. Touch control.',
     image: 'https://images.unsplash.com/photo-1513506003901-1e6a35f2ef2d?w=400&q=80',
     badge: 'New',
     inStock: true,
@@ -235,7 +244,8 @@ const products = [
     originalPrice: 2199,
     rating: 4.3,
     reviews: 329,
-    description: '6-piece bamboo desk organiser: pen holder, letter tray, sticky note pad holder, and more.',
+    description:
+      '6-piece bamboo desk organiser: pen holder, letter tray, sticky note pad holder, and more.',
     image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&q=80',
     badge: null,
     inStock: true,
@@ -261,7 +271,8 @@ const products = [
     originalPrice: 10999,
     rating: 4.7,
     reviews: 1034,
-    description: 'Covers 500 sq ft, 3-stage filtration, ultra-quiet sleep mode, real-time air quality display.',
+    description:
+      'Covers 500 sq ft, 3-stage filtration, ultra-quiet sleep mode, real-time air quality display.',
     image: 'https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=400&q=80',
     badge: 'Sale',
     inStock: true,

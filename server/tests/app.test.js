@@ -78,26 +78,20 @@ describe('Cart API', () => {
   });
 
   it('POST /api/cart should add a product to the cart', async () => {
-    const res = await request(app)
-      .post('/api/cart')
-      .send({ productId: 1, qty: 1 });
+    const res = await request(app).post('/api/cart').send({ productId: 1, qty: 1 });
     expect(res.statusCode).toEqual(201);
     expect(res.body.items.length).toBeGreaterThan(0);
     expect(res.body.items[0].productId).toBe(1);
   });
 
   it('POST /api/cart should return 400 when productId is missing', async () => {
-    const res = await request(app)
-      .post('/api/cart')
-      .send({ qty: 1 });
+    const res = await request(app).post('/api/cart').send({ qty: 1 });
     expect(res.statusCode).toEqual(400);
     expect(res.body).toHaveProperty('error');
   });
 
   it('POST /api/cart should return 404 for unknown productId', async () => {
-    const res = await request(app)
-      .post('/api/cart')
-      .send({ productId: 9999, qty: 1 });
+    const res = await request(app).post('/api/cart').send({ productId: 9999, qty: 1 });
     expect(res.statusCode).toEqual(404);
   });
 

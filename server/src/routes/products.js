@@ -9,9 +9,7 @@ router.get('/', (req, res) => {
   let result = [...products];
 
   if (category && category !== 'All') {
-    result = result.filter(
-      (p) => p.category.toLowerCase() === category.toLowerCase()
-    );
+    result = result.filter((p) => p.category.toLowerCase() === category.toLowerCase());
   }
 
   if (search && search.trim()) {

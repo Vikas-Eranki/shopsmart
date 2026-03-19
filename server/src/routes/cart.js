@@ -56,7 +56,9 @@ router.delete('/:productId', (req, res) => {
 });
 
 // Expose cart reference for checkout route to reset
-router.clearCart = () => { cart = []; };
+router.clearCart = () => {
+  cart = [];
+};
 router.getCart = () => cart;
 
 module.exports = router;

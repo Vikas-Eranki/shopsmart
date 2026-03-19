@@ -4,8 +4,8 @@
  * @returns {string}
  */
 export function formatPrice(cents) {
-    if (typeof cents !== 'number' || isNaN(cents)) return '$0.00';
-    return `$${(cents / 100).toFixed(2)}`;
+  if (typeof cents !== 'number' || isNaN(cents)) return '$0.00';
+  return `$${(cents / 100).toFixed(2)}`;
 }
 
 /**
@@ -14,14 +14,14 @@ export function formatPrice(cents) {
  * @returns {string}
  */
 export function formatDate(isoString) {
-    if (!isoString) return '';
-    const date = new Date(isoString);
-    if (isNaN(date.getTime())) return '';
-    return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-    });
+  if (!isoString) return '';
+  const date = new Date(isoString);
+  if (isNaN(date.getTime())) return '';
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
 }
 
 /**
@@ -31,9 +31,9 @@ export function formatDate(isoString) {
  * @returns {string}
  */
 export function truncateText(text, maxLen = 50) {
-    if (!text) return '';
-    if (text.length <= maxLen) return text;
-    return text.slice(0, maxLen) + '...';
+  if (!text) return '';
+  if (text.length <= maxLen) return text;
+  return text.slice(0, maxLen) + '...';
 }
 
 /**
@@ -42,13 +42,13 @@ export function truncateText(text, maxLen = 50) {
  * @returns {string}
  */
 export function slugify(text) {
-    if (!text) return '';
-    return text
-        .toLowerCase()
-        .trim()
-        .replace(/[^\w\s-]/g, '')
-        .replace(/[\s_]+/g, '-')
-        .replace(/-+/g, '-');
+  if (!text) return '';
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_]+/g, '-')
+    .replace(/-+/g, '-');
 }
 
 /**
@@ -58,9 +58,9 @@ export function slugify(text) {
  * @returns {number} discounted price in cents
  */
 export function calculateDiscount(price, percent) {
-    if (typeof price !== 'number' || typeof percent !== 'number') return 0;
-    if (percent < 0 || percent > 100) return price;
-    return Math.round(price * (1 - percent / 100));
+  if (typeof price !== 'number' || typeof percent !== 'number') return 0;
+  if (percent < 0 || percent > 100) return price;
+  return Math.round(price * (1 - percent / 100));
 }
 
 /**
@@ -69,7 +69,7 @@ export function calculateDiscount(price, percent) {
  * @returns {boolean}
  */
 export function validateEmail(email) {
-    if (!email) return false;
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
+  if (!email) return false;
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return re.test(email);
 }
