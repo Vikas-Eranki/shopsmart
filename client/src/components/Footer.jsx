@@ -139,7 +139,7 @@ function Footer() {
         <div className="footer-bottom">
           <p className="footer-copy">© 2026 ShopSmart. All rights reserved.</p>
           <div className="trust-badges">
-            <span className="trust-badge">🔒 SSL Secured</span>
+            {/* <span className="trust-badge">🔒 SSL Secured</span> */}
             <span className="trust-badge">🚚 Free Shipping ₹999+</span>
             <span className="trust-badge">↩️ 30-Day Returns</span>
           </div>
