@@ -16,21 +16,21 @@ const TESTIMONIALS = [
   {
     name: 'Priya S.',
     role: 'Verified Buyer',
-    text: "Absolutely love ShopSmart! The products are top-notch and delivery was super fast. The checkout experience is the smoothest I've ever used.",
+    text: "An extraordinary shopping experience. Every piece exceeded my expectations. The quality feels genuinely luxurious and delivery was impeccable.",
     rating: 5,
     initial: 'P',
   },
   {
     name: 'Rajan M.',
     role: 'Verified Buyer',
-    text: 'Found amazing deals on electronics. The quality exceeded my expectations and customer support was very helpful when I had a query.',
+    text: 'Refined curation, beautiful packaging, and a website that makes browsing a real pleasure. This is fashion the way it should be experienced online.',
     rating: 5,
     initial: 'R',
   },
   {
     name: 'Aisha K.',
     role: 'Verified Buyer',
-    text: 'Great variety and competitive prices. I ordered headphones and received them in 2 days. Packaging was perfect. Will definitely shop again!',
+    text: 'Found the perfect cashmere coat I had been searching for months. The quality is genuinely exceptional. I return every season.',
     rating: 5,
     initial: 'A',
   },
@@ -38,13 +38,13 @@ const TESTIMONIALS = [
 
 function Toast({ message, type = 'success', onDismiss }) {
   useEffect(() => {
-    const t = setTimeout(onDismiss, 3000);
+    const t = setTimeout(onDismiss, 3200);
     return () => clearTimeout(t);
   }, [onDismiss]);
 
   return (
     <div className={`toast toast-${type}`} role="alert">
-      <span className="toast-icon">{type === 'success' ? '✅' : '❌'}</span>
+      <span className="toast-icon">{type === 'success' ? '✓' : '✕'}</span>
       <span>{message}</span>
     </div>
   );
@@ -52,14 +52,13 @@ function Toast({ message, type = 'success', onDismiss }) {
 
 function SkeletonCard() {
   return (
-    <div className="product-card skeleton-card" style={{ background: 'var(--clr-surface)' }}>
-      <div className="skeleton" style={{ aspectRatio: '1/1', width: '100%' }} />
-      <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        <div className="skeleton" style={{ height: '12px', width: '60%' }} />
-        <div className="skeleton" style={{ height: '16px', width: '90%' }} />
-        <div className="skeleton" style={{ height: '12px', width: '40%' }} />
-        <div className="skeleton" style={{ height: '20px', width: '50%' }} />
-        <div className="skeleton" style={{ height: '40px', borderRadius: '12px' }} />
+    <div className="product-card skeleton-card">
+      <div className="skeleton" style={{ aspectRatio: '3/4', width: '100%' }} />
+      <div style={{ padding: '20px 0', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div className="skeleton" style={{ height: '10px', width: '40%' }} />
+        <div className="skeleton" style={{ height: '20px', width: '80%' }} />
+        <div className="skeleton" style={{ height: '14px', width: '30%', marginTop: '8px' }} />
+        <div className="skeleton" style={{ height: '38px', marginTop: '12px' }} />
       </div>
     </div>
   );
@@ -85,7 +84,6 @@ function App() {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
-  // Fetch products whenever category or search changes
   useEffect(() => {
     const load = async () => {
       setLoading(true);
@@ -107,7 +105,6 @@ function App() {
     load();
   }, [activeCategory, searchQuery]);
 
-  // Derive sorted products
   const sortedProducts = [...products].sort((a, b) => {
     if (sortBy === 'price-asc') return a.price - b.price;
     if (sortBy === 'price-desc') return b.price - a.price;
@@ -118,47 +115,30 @@ function App() {
   const cartCount = cart.reduce((s, i) => s + i.qty, 0);
 
   const handleAddToCart = (product) => {
-    setCart((prev) =>
-      addItem(prev, {
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        image: product.image,
-      })
-    );
-    showToast(`${product.name} added to cart 🛒`);
+    setCart((prev) => addItem(prev, { id: product.id, name: product.name, price: product.price, image: product.image }));
+    showToast(`${product.name} added to your bag`);
   };
 
-  const handleRemoveFromCart = (id) => {
-    setCart((prev) => removeItem(prev, id));
-  };
+  const handleRemoveFromCart = (id) => setCart((prev) => removeItem(prev, id));
 
   const handleQtyChange = (id, newQty) => {
     if (newQty < 1) return;
     setCart((prev) => prev.map((item) => (item.id === id ? { ...item, qty: newQty } : item)));
   };
 
-  const handleOpenCheckout = () => {
-    setCartOpen(false);
-    setCheckoutOpen(true);
-  };
+  const handleOpenCheckout = () => { setCartOpen(false); setCheckoutOpen(true); };
 
   const handlePlaceOrder = async (cartItems) => {
     try {
       const res = await checkoutApi(cartItems);
       setCart([]);
-      showToast('Order placed successfully! 🎉');
+      showToast('Order confirmed — thank you for shopping with Maison');
       return res.orderId;
     } catch {
-      // fallback — generate local order ID
       const id = `ORD-${Date.now()}`;
       setCart([]);
       return id;
     }
-  };
-
-  const handleCheckoutClose = () => {
-    setCheckoutOpen(false);
   };
 
   const scrollToProducts = () => {
@@ -168,16 +148,26 @@ function App() {
   return (
     <div data-testid="app-root">
       {/* Header */}
-      <Header
-        cartCount={cartCount}
-        onCartClick={() => setCartOpen(true)}
-        onSearch={setSearchQuery}
-      />
+      <Header cartCount={cartCount} onCartClick={() => setCartOpen(true)} onSearch={setSearchQuery} />
 
       {/* Hero */}
       <Hero onShopNow={scrollToProducts} />
 
-      {/* Categories */}
+      {/* Marquee Strip */}
+      <div className="marquee-strip" aria-hidden="true">
+        <div className="marquee-track">
+          {[...Array(2)].map((_, outerIdx) => (
+            ['Free Shipping on Orders ₹999+', 'New Season Collection Now Live', 'Complimentary Returns Within 30 Days', 'Sustainably Crafted', 'Express Delivery Available', 'Members Receive Early Access'].map((item, i) => (
+              <span key={`${outerIdx}-${i}`} className="marquee-item">
+                {item}
+                <span className="marquee-sep" />
+              </span>
+            ))
+          ))}
+        </div>
+      </div>
+
+      {/* Category Filter */}
       <CategoryGrid activeCategory={activeCategory} onSelect={setActiveCategory} />
 
       {/* Products Section */}
@@ -187,13 +177,12 @@ function App() {
             <div>
               <div className="section-label">Our Collection</div>
               <h2 className="section-title">
-                {activeCategory === 'All' ? 'All Products' : activeCategory}
+                {activeCategory === 'All' ? 'All Pieces' : activeCategory}
               </h2>
             </div>
-
             <div className="products-filters">
               <span className="products-count" data-testid="products-count">
-                {loading ? '…' : `${sortedProducts.length} products`}
+                {loading ? '—' : `${sortedProducts.length} pieces`}
               </span>
               <select
                 className="filter-select"
@@ -201,13 +190,11 @@ function App() {
                 onChange={(e) => setSortBy(e.target.value)}
                 aria-label="Sort products"
               >
-                <option value="default">Sort by: Featured</option>
+                <option value="default">Featured</option>
                 <option value="price-asc">Price: Low to High</option>
                 <option value="price-desc">Price: High to Low</option>
                 <option value="rating">Top Rated</option>
               </select>
-
-              {/* Inline search for product section */}
               <div style={{ display: 'none' }}>
                 <SearchBar onSearch={setSearchQuery} />
               </div>
@@ -218,17 +205,13 @@ function App() {
             {loading ? (
               Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)
             ) : sortedProducts.length === 0 ? (
-              <div
-                style={{
-                  gridColumn: '1/-1',
-                  textAlign: 'center',
-                  padding: '80px 20px',
-                  color: 'var(--clr-text-secondary)',
-                }}
-              >
-                <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔍</div>
-                <p style={{ fontSize: '18px', fontWeight: 600 }}>No products found</p>
-                <p style={{ marginTop: '8px' }}>Try a different search or category</p>
+              <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '100px 20px', color: 'var(--clr-text-muted)' }}>
+                <p style={{ fontFamily: 'var(--font-serif)', fontSize: '28px', fontWeight: 400, marginBottom: '12px', color: 'var(--clr-ink)' }}>
+                  No pieces found
+                </p>
+                <p style={{ fontSize: '14px', fontWeight: 300, letterSpacing: '0.3px' }}>
+                  Try a different search or browse another collection.
+                </p>
               </div>
             ) : (
               sortedProducts.map((product) => (
@@ -239,19 +222,67 @@ function App() {
         </div>
       </section>
 
+      {/* Editorial Banner — Featured Collection */}
+      <section id="collections">
+        <div className="editorial-banner">
+          <div className="editorial-banner-img">
+            <img
+              src="https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=900&q=85"
+              alt="Featured collection editorial"
+            />
+          </div>
+          <div className="editorial-banner-content">
+            <div className="section-label">Featured Collection</div>
+            <h2 className="section-title">
+              The<br />
+              <em style={{ fontStyle: 'italic' }}>Quiet Luxury</em><br />
+              Edit
+            </h2>
+            <p className="section-sub" style={{ marginTop: '20px' }}>
+              Refined pieces that speak through restraint — timeless silhouettes in understated palettes.
+            </p>
+            <button
+              className="btn btn-outline"
+              style={{ marginTop: '40px', alignSelf: 'flex-start' }}
+              onClick={scrollToProducts}
+            >
+              Shop the Edit
+            </button>
+          </div>
+        </div>
+      </section>
+
       {/* Promo Banner */}
       <section className="section-gap-sm" id="deals">
         <div className="container">
           <div className="promo-banner" data-testid="promo-banner">
             <div>
-              <h2 className="promo-title">Summer Sale — Up to 40% Off 🌞</h2>
+              <h2 className="promo-title">
+                End of Season<br />Sale — Up to 40% Off
+              </h2>
               <p className="promo-sub">
-                Limited time. Shop your favourites before they&apos;re gone.
+                A curated selection, reduced. Shop before they're gone.
               </p>
             </div>
-            <button className="btn btn-light" onClick={scrollToProducts}>
-              Shop the Sale →
+            <button className="btn btn-light" style={{ flexShrink: 0 }} onClick={scrollToProducts}>
+              Shop the Sale
             </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Press Strip */}
+      <section>
+        <div className="container">
+          <div className="press-strip">
+            <div className="press-strip-label">As Seen In</div>
+            <div className="press-logos">
+              <span className="press-logo">Vogue</span>
+              <span className="press-logo">Harper&apos;s Bazaar</span>
+              <span className="press-logo">Elle</span>
+              <span className="press-logo">GQ</span>
+              <span className="press-logo">Wallpaper*</span>
+            </div>
           </div>
         </div>
       </section>
@@ -259,13 +290,13 @@ function App() {
       {/* Testimonials */}
       <section className="section-gap">
         <div className="container">
-          <div className="section-label">What Customers Say</div>
-          <h2 className="section-title">Loved by Thousands</h2>
+          <div className="section-label">Client Stories</div>
+          <h2 className="section-title">Worn &amp; Loved</h2>
           <div className="testimonial-grid" data-testid="testimonials">
             {TESTIMONIALS.map((t) => (
               <div key={t.name} className="testimonial-card">
                 <div className="testimonial-stars">{'★'.repeat(t.rating)}</div>
-                <p className="testimonial-text">&quot;{t.text}&quot;</p>
+                <p className="testimonial-text">&ldquo;{t.text}&rdquo;</p>
                 <div className="testimonial-author">
                   <div className="author-avatar">{t.initial}</div>
                   <div>
@@ -281,36 +312,36 @@ function App() {
 
       {/* Newsletter */}
       <section
-        className="section-gap-sm"
-        style={{
-          background: 'var(--clr-surface)',
-          borderTop: '1px solid var(--clr-border)',
-          borderBottom: '1px solid var(--clr-border)',
-        }}
+        className="section-gap"
+        style={{ background: 'var(--clr-surface-2)', borderTop: '1px solid var(--clr-border)' }}
       >
         <div className="container">
           <div className="newsletter-section" data-testid="newsletter">
-            <div className="section-label">Stay in the Loop</div>
-            <h2 className="section-title">Get Exclusive Deals</h2>
-            <p className="section-sub" style={{ margin: '12px auto 0' }}>
-              Subscribe to our newsletter and be the first to know about new products, special
-              offers, and more.
-            </p>
+            <div>
+              <div className="section-label">Stay Connected</div>
+              <h2 className="section-title">The Maison Letter</h2>
+              <p className="section-sub">
+                New arrivals, private sales, and editorial stories — delivered to your inbox first.
+              </p>
+            </div>
             <form
               className="newsletter-form"
               onSubmit={(e) => {
                 e.preventDefault();
-                showToast("You're subscribed! 🎉");
+                showToast('Welcome to Maison — you are now subscribed');
               }}
             >
+              <div style={{ fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase', color: 'var(--clr-text-muted)', marginBottom: '4px' }}>
+                Email Address
+              </div>
               <input
                 type="email"
                 className="newsletter-input"
-                placeholder="Enter your email address"
+                placeholder="your@email.com"
                 required
                 aria-label="Email for newsletter"
               />
-              <button type="submit" className="btn btn-primary" style={{ flexShrink: 0 }}>
+              <button type="submit" className="btn btn-primary" style={{ alignSelf: 'flex-start', marginTop: '8px', padding: '13px 32px' }}>
                 Subscribe
               </button>
             </form>
@@ -334,22 +365,17 @@ function App() {
 
       {/* Checkout Modal */}
       {checkoutOpen && (
-        <CheckoutModal cart={cart} onClose={handleCheckoutClose} onPlaceOrder={handlePlaceOrder} />
+        <CheckoutModal cart={cart} onClose={() => setCheckoutOpen(false)} onPlaceOrder={handlePlaceOrder} />
       )}
 
       {/* Toasts */}
       <div className="toast-container" aria-live="polite">
         {toasts.map((toast) => (
-          <Toast
-            key={toast.id}
-            message={toast.message}
-            type={toast.type}
-            onDismiss={() => dismissToast(toast.id)}
-          />
+          <Toast key={toast.id} message={toast.message} type={toast.type} onDismiss={() => dismissToast(toast.id)} />
         ))}
       </div>
 
-      {/* Hidden legacy container class for E2E test compatibility */}
+      {/* Hidden container for E2E test compatibility */}
       <div className="container" style={{ display: 'none' }} />
     </div>
   );
