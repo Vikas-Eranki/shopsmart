@@ -81,36 +81,5 @@ resource "aws_eks_cluster" "this" {
   depends_on = []
 }
 
-resource "aws_eks_node_group" "this" {
-  cluster_name    = aws_eks_cluster.this.name
-  node_group_name = "shopsmart-nodes-${var.environment}"
-  node_role_arn   = data.aws_iam_role.lab_role.arn
-
-  # AWS Academy has no NAT gateway — use public subnets so nodes can pull AMIs
-  subnet_ids     = var.public_subnet_ids
-  instance_types = [var.node_instance_type]
-
-  scaling_config {
-    desired_size = var.node_desired_count
-    min_size     = 2
-    max_size     = var.node_max_count
-  }
-
-  update_config {
-    max_unavailable = 1
-  }
-
-  disk_size = 20
-
-  labels = {
-    role        = "worker"
-    environment = var.environment
-  }
-
-  depends_on = []
-
-  # desired_size is managed by the cluster autoscaler after initial creation
-  lifecycle {
-    ignore_changes = [scaling_config[0].desired_size]
-  }
-}
+# NOTE: aws_eks_node_group is managed by pipeline-eks.yml (not Terraform).
+# AWS Academy blocks the managed node group AMI for EKS 1.29 when created via Terraform.

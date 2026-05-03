@@ -13,8 +13,3 @@ output "cluster_ca_certificate" {
   value       = aws_eks_cluster.this.certificate_authority[0].data
   sensitive   = true
 }
-
-output "node_group_arn" {
-  description = "ARN of the managed node group"
-  value       = aws_eks_node_group.this.arn
-}
