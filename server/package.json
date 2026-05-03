@@ -6,11 +6,35 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "test": "jest",
+    "test": "jest --forceExit",
     "test:api": "jest --testPathPattern=tests/ --forceExit",
+    "test:ci": "jest --testPathPattern=tests/ --forceExit --coverage --coverageDirectory=coverage --coverageReporters=lcov,text,json-summary",
     "lint": "eslint src/**/*.js --max-warnings 0",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coverageThreshold": {
+      "global": {
+        "branches": 50,
+        "functions": 50,
+        "lines": 50,
+        "statements": 50
+      }
+    },
+    "reporters": [
+      "default",
+      [
+        "jest-junit",
+        {
+          "outputDirectory": "./test-reports",
+          "outputName": "backend-junit.xml",
+          "classNameTemplate": "{classname}",
+          "titleTemplate": "{title}"
+        }
+      ]
+    ]
   },
   "dependencies": {
     "cors": "^2.8.5",
@@ -19,6 +43,7 @@
   },
   "devDependencies": {
     "jest": "^29.7.0",
+    "jest-junit": "^16.0.0",
     "eslint": "^8.57.0",
     "nodemon": "^3.1.0",
     "prettier": "^3.2.5",
