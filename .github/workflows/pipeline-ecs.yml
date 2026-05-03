@@ -1,0 +1,236 @@
+# pipeline-ecs: builds a Docker image, pushes it to ECR, and deploys to ECS Fargate
+name: "pipeline-ecs"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "server/**"
+      - ".github/workflows/pipeline-ecs.yml"
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Image tag to deploy (default: git SHA)"
+        required: false
+        default: ""
+
+env:
+  AWS_REGION:     ${{ secrets.AWS_REGION }}
+  ECR_REPO_NAME:  shopsmart-backend-prod
+  ECS_CLUSTER:    shopsmart-cluster-prod
+  ECS_SERVICE:    shopsmart-service-prod
+  CONTAINER_NAME: shopsmart-backend
+
+jobs:
+  # Builds the Docker image and pushes it to ECR with a SHA-based tag
+  build-and-push:
+    name: "Build and Push"
+    runs-on: ubuntu-latest
+
+    outputs:
+      image_tag:     ${{ steps.meta.outputs.image_tag }}
+      ecr_image_uri: ${{ steps.meta.outputs.ecr_image_uri }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token:     ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region:            ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # Computes the tag and full image URI in one step so both job outputs share the same step id
+      - name: Compute image tag and ECR URI
+        id: meta
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          TAG="${{ github.event.inputs.image_tag }}"
+          if [ -z "$TAG" ]; then
+            TAG="${GITHUB_SHA::8}"
+          fi
+          URI="${REGISTRY}/${{ env.ECR_REPO_NAME }}:${TAG}"
+
+          echo "image_tag=${TAG}"     >> "$GITHUB_OUTPUT"
+          echo "ecr_image_uri=${URI}" >> "$GITHUB_OUTPUT"
+          echo "IMAGE_TAG=${TAG}"     >> "$GITHUB_ENV"
+          echo "ECR_IMAGE_URI=${URI}" >> "$GITHUB_ENV"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context:    ./server
+          file:       ./server/Dockerfile
+          push:       true
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPO_NAME }}:${{ steps.meta.outputs.image_tag }}
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPO_NAME }}:latest
+          cache-from: type=gha
+          cache-to:   type=gha,mode=max
+          labels: |
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+
+      - name: Verify image exists in ECR
+        run: |
+          aws ecr describe-images \
+            --repository-name "${{ env.ECR_REPO_NAME }}" \
+            --image-ids imageTag="${IMAGE_TAG}" \
+            --region "${{ env.AWS_REGION }}"
+
+      - name: Write job summary
+        run: |
+          {
+            echo "## Build and Push"
+            echo "| Key | Value |"
+            echo "|-----|-------|"
+            echo "| Image Tag | \`${IMAGE_TAG}\` |"
+            echo "| ECR URI   | \`${ECR_IMAGE_URI}\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # Updates the ECS task definition with the new image and deploys to Fargate
+  deploy-ecs:
+    name: "Deploy to ECS"
+    runs-on: ubuntu-latest
+    needs: build-and-push
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token:     ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region:            ${{ secrets.AWS_REGION }}
+
+      # Strips read-only fields that cannot be submitted when registering a new revision
+      - name: Download current ECS task definition
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition "shopsmart-backend-prod" \
+            --query "taskDefinition" \
+            --output json \
+          | jq 'del(
+              .taskDefinitionArn, .revision, .status,
+              .requiresAttributes, .compatibilities,
+              .registeredAt, .registeredBy
+            )' \
+          > task-def.json
+
+      - name: Render updated ECS task definition
+        id: render-td
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-def.json
+          container-name:  ${{ env.CONTAINER_NAME }}
+          image:           ${{ needs.build-and-push.outputs.ecr_image_uri }}
+
+      # Waits until the rolling deployment reaches a stable state before continuing
+      - name: Deploy to ECS Fargate
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          cluster:         ${{ env.ECS_CLUSTER }}
+          service:         ${{ env.ECS_SERVICE }}
+          task-definition: ${{ steps.render-td.outputs.task-definition }}
+          wait-for-service-stability: true
+
+      - name: Write job summary
+        run: |
+          {
+            echo "## ECS Deployment"
+            echo "| Key | Value |"
+            echo "|-----|-------|"
+            echo "| Cluster   | \`${{ env.ECS_CLUSTER }}\` |"
+            echo "| Service   | \`${{ env.ECS_SERVICE }}\` |"
+            echo "| Image Tag | \`${{ needs.build-and-push.outputs.image_tag }}\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # Confirms the service has the expected number of running tasks and the ALB returns 200
+  verify-ecs:
+    name: "Verify ECS Health"
+    runs-on: ubuntu-latest
+    needs: deploy-ecs
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token:     ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region:            ${{ secrets.AWS_REGION }}
+
+      - name: Check running vs desired task count
+        run: |
+          SVC=$(aws ecs describe-services \
+            --cluster "${{ env.ECS_CLUSTER }}" \
+            --services "${{ env.ECS_SERVICE }}" \
+            --query "services[0]" \
+            --output json)
+
+          RUNNING=$(echo "$SVC" | jq -r '.runningCount')
+          DESIRED=$(echo "$SVC" | jq -r '.desiredCount')
+
+          echo "Running: ${RUNNING} / Desired: ${DESIRED}"
+          if [ "$RUNNING" -lt "$DESIRED" ]; then
+            echo "Not all tasks are running (${RUNNING}/${DESIRED})"
+            exit 1
+          fi
+
+      - name: Fetch ALB DNS and run health check
+        run: |
+          TG_ARN=$(aws ecs describe-services \
+            --cluster "${{ env.ECS_CLUSTER }}" \
+            --services "${{ env.ECS_SERVICE }}" \
+            --query "services[0].loadBalancers[0].targetGroupArn" \
+            --output text 2>/dev/null || true)
+
+          if [ -z "$TG_ARN" ] || [ "$TG_ARN" = "None" ]; then
+            echo "No ALB attached to this service, skipping HTTP check."
+            exit 0
+          fi
+
+          LB_ARN=$(aws elbv2 describe-target-groups \
+            --target-group-arns "$TG_ARN" \
+            --query "TargetGroups[0].LoadBalancerArns[0]" \
+            --output text)
+
+          if [ -z "$LB_ARN" ] || [ "$LB_ARN" = "None" ]; then
+            echo "Target group has no load balancer, skipping."
+            exit 0
+          fi
+
+          DNS=$(aws elbv2 describe-load-balancers \
+            --load-balancer-arns "$LB_ARN" \
+            --query "LoadBalancers[0].DNSName" \
+            --output text)
+
+          echo "Polling http://${DNS}/api/health"
+          for i in 1 2 3 4 5; do
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+              --max-time 10 "http://${DNS}/api/health" 2>/dev/null || echo "000")
+            echo "Attempt ${i}: HTTP ${HTTP_CODE}"
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "Health check passed."
+              exit 0
+            fi
+            sleep 15
+          done
+
+          echo "Health endpoint did not return 200 after 5 attempts"
+          exit 1
+
+      - name: Write job summary
+        run: echo "## ECS Service Verified" >> "$GITHUB_STEP_SUMMARY"
