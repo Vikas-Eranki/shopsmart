@@ -28,8 +28,7 @@ jobs:
     runs-on: ubuntu-latest
 
     outputs:
-      image_tag:     ${{ steps.meta.outputs.image_tag }}
-      ecr_image_uri: ${{ steps.meta.outputs.ecr_image_uri }}
+      image_tag: ${{ steps.meta.outputs.image_tag }}
 
     steps:
       - uses: actions/checkout@v4
@@ -46,22 +45,15 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      # Computes the tag and full image URI in one step so both job outputs share the same step id
-      - name: Compute image tag and ECR URI
+      - name: Compute image tag
         id: meta
-        env:
-          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
           TAG="${{ github.event.inputs.image_tag }}"
           if [ -z "$TAG" ]; then
             TAG="${GITHUB_SHA::8}"
           fi
-          URI="${REGISTRY}/${{ env.ECR_REPO_NAME }}:${TAG}"
-
-          echo "image_tag=${TAG}"     >> "$GITHUB_OUTPUT"
-          echo "ecr_image_uri=${URI}" >> "$GITHUB_OUTPUT"
-          echo "IMAGE_TAG=${TAG}"     >> "$GITHUB_ENV"
-          echo "ECR_IMAGE_URI=${URI}" >> "$GITHUB_ENV"
+          echo "image_tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "IMAGE_TAG=${TAG}" >> "$GITHUB_ENV"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -95,7 +87,6 @@ jobs:
             echo "| Key | Value |"
             echo "|-----|-------|"
             echo "| Image Tag | \`${IMAGE_TAG}\` |"
-            echo "| ECR URI   | \`${ECR_IMAGE_URI}\` |"
           } >> "$GITHUB_STEP_SUMMARY"
 
   # Updates the ECS task definition with the new image and deploys to Fargate
@@ -115,7 +106,14 @@ jobs:
           aws-session-token:     ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region:            ${{ secrets.AWS_REGION }}
 
-      # Strips read-only fields that cannot be submitted when registering a new revision
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Resolve full image URI
+        run: |
+          echo "ECR_IMAGE=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPO_NAME }}:${{ needs.build-and-push.outputs.image_tag }}" >> "$GITHUB_ENV"
+
       - name: Download current ECS task definition
         run: |
           aws ecs describe-task-definition \
@@ -135,7 +133,7 @@ jobs:
         with:
           task-definition: task-def.json
           container-name:  ${{ env.CONTAINER_NAME }}
-          image:           ${{ needs.build-and-push.outputs.ecr_image_uri }}
+          image:           ${{ env.ECR_IMAGE }}
 
       # Waits until the rolling deployment reaches a stable state before continuing
       - name: Deploy to ECS Fargate
