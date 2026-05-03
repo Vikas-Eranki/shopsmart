@@ -8,11 +8,7 @@ const CATEGORIES = [
 
 function CategoryGrid({ activeCategory, onSelect }) {
   return (
-    <section
-      className="category-filter-wrap"
-      id="categories"
-      data-testid="category-section"
-    >
+    <section className="category-filter-wrap" id="categories" data-testid="category-section">
       <div className="container">
         <div className="category-filter">
           {CATEGORIES.map((cat) => (

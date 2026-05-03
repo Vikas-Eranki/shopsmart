@@ -15,7 +15,7 @@ defaults:
     working-directory: server
 
 jobs:
-  # ─── Job 1: Lint ────────────────────────────────────────────────────────────
+  #  Job 1: Lint 
   lint:
     name: "Backend — Lint (ESLint)"
     runs-on: ubuntu-latest
@@ -37,7 +37,7 @@ jobs:
       - name: Run ESLint
         run: npm run lint
 
-  # ─── Job 2: Format Check ────────────────────────────────────────────────────
+  #  Job 2: Format Check 
   format:
     name: "Backend — Format Check (Prettier)"
     runs-on: ubuntu-latest
@@ -59,7 +59,7 @@ jobs:
       - name: Check formatting with Prettier
         run: npm run format:check
 
-  # ─── Job 3: API Tests (Unit + Integration via supertest) ────────────────────
+  #  Job 3: API Tests (Unit + Integration via supertest) 
   api-tests:
     name: "Backend — API Tests (Jest + Supertest)"
     runs-on: ubuntu-latest

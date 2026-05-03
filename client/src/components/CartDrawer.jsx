@@ -11,8 +11,16 @@ function CartDrawer({ cart, onClose, onRemove, onQtyChange, onCheckout }) {
         {/* Header */}
         <div className="cart-header">
           <h2 className="cart-title">
-            Your Bag{count > 0 && (
-              <span style={{ fontSize: '16px', fontWeight: 300, color: 'var(--clr-text-muted)', marginLeft: '8px' }}>
+            Your Bag
+            {count > 0 && (
+              <span
+                style={{
+                  fontSize: '16px',
+                  fontWeight: 300,
+                  color: 'var(--clr-text-muted)',
+                  marginLeft: '8px',
+                }}
+              >
                 ({count})
               </span>
             )}
@@ -23,8 +31,17 @@ function CartDrawer({ cart, onClose, onRemove, onQtyChange, onCheckout }) {
             aria-label="Close cart"
             data-testid="close-cart-btn"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
         </div>
@@ -34,17 +51,48 @@ function CartDrawer({ cart, onClose, onRemove, onQtyChange, onCheckout }) {
           {cart.length === 0 ? (
             <div className="cart-empty" data-testid="cart-empty">
               <div className="cart-empty-icon">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--clr-text-muted)', opacity: 0.5 }}>
-                  <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
-                  <line x1="3" y1="6" x2="21" y2="6"/>
-                  <path d="M16 10a4 4 0 0 1-8 0"/>
+                <svg
+                  width="48"
+                  height="48"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{ color: 'var(--clr-text-muted)', opacity: 0.5 }}
+                >
+                  <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <path d="M16 10a4 4 0 0 1-8 0" />
                 </svg>
               </div>
-              <p style={{ fontFamily: 'var(--font-serif)', fontSize: '20px', fontWeight: 400, color: 'var(--clr-ink)' }}>Your bag is empty</p>
-              <p style={{ fontSize: '13px', fontWeight: 300, color: 'var(--clr-text-secondary)', textAlign: 'center', lineHeight: 1.7 }}>
+              <p
+                style={{
+                  fontFamily: 'var(--font-serif)',
+                  fontSize: '20px',
+                  fontWeight: 400,
+                  color: 'var(--clr-ink)',
+                }}
+              >
+                Your bag is empty
+              </p>
+              <p
+                style={{
+                  fontSize: '13px',
+                  fontWeight: 300,
+                  color: 'var(--clr-text-secondary)',
+                  textAlign: 'center',
+                  lineHeight: 1.7,
+                }}
+              >
                 Discover our curated collections and add your favourites.
               </p>
-              <button className="btn btn-primary" onClick={onClose} style={{ marginTop: '24px', padding: '13px 32px' }}>
+              <button
+                className="btn btn-primary"
+                onClick={onClose}
+                style={{ marginTop: '24px', padding: '13px 32px' }}
+              >
                 Explore Collection
               </button>
             </div>
@@ -52,9 +100,11 @@ function CartDrawer({ cart, onClose, onRemove, onQtyChange, onCheckout }) {
             cart.map((item) => (
               <div key={item.id} className="cart-item" data-testid={`cart-item-${item.id}`}>
                 <img
-                  src={item.image && item.image.startsWith('http')
-                    ? item.image
-                    : 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=200&q=80'}
+                  src={
+                    item.image && item.image.startsWith('http')
+                      ? item.image
+                      : 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=200&q=80'
+                  }
                   alt={item.name}
                   className="cart-item-img"
                 />
@@ -101,7 +151,14 @@ function CartDrawer({ cart, onClose, onRemove, onQtyChange, onCheckout }) {
                 {formatPrice(total)}
               </span>
             </div>
-            <p style={{ fontSize: '11px', color: 'var(--clr-text-muted)', letterSpacing: '0.5px', textAlign: 'center' }}>
+            <p
+              style={{
+                fontSize: '11px',
+                color: 'var(--clr-text-muted)',
+                letterSpacing: '0.5px',
+                textAlign: 'center',
+              }}
+            >
               Shipping &amp; taxes calculated at checkout
             </p>
             <button
@@ -114,7 +171,12 @@ function CartDrawer({ cart, onClose, onRemove, onQtyChange, onCheckout }) {
             </button>
             <button
               className="btn btn-ghost"
-              style={{ width: '100%', justifyContent: 'center', fontSize: '11px', letterSpacing: '1px' }}
+              style={{
+                width: '100%',
+                justifyContent: 'center',
+                fontSize: '11px',
+                letterSpacing: '1px',
+              }}
               onClick={onClose}
             >
               Continue Shopping

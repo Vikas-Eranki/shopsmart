@@ -16,7 +16,7 @@ const TESTIMONIALS = [
   {
     name: 'Priya S.',
     role: 'Verified Buyer',
-    text: "An extraordinary shopping experience. Every piece exceeded my expectations. The quality feels genuinely luxurious and delivery was impeccable.",
+    text: 'An extraordinary shopping experience. Every piece exceeded my expectations. The quality feels genuinely luxurious and delivery was impeccable.',
     rating: 5,
     initial: 'P',
   },
@@ -115,7 +115,14 @@ function App() {
   const cartCount = cart.reduce((s, i) => s + i.qty, 0);
 
   const handleAddToCart = (product) => {
-    setCart((prev) => addItem(prev, { id: product.id, name: product.name, price: product.price, image: product.image }));
+    setCart((prev) =>
+      addItem(prev, {
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        image: product.image,
+      })
+    );
     showToast(`${product.name} added to your bag`);
   };
 
@@ -126,7 +133,10 @@ function App() {
     setCart((prev) => prev.map((item) => (item.id === id ? { ...item, qty: newQty } : item)));
   };
 
-  const handleOpenCheckout = () => { setCartOpen(false); setCheckoutOpen(true); };
+  const handleOpenCheckout = () => {
+    setCartOpen(false);
+    setCheckoutOpen(true);
+  };
 
   const handlePlaceOrder = async (cartItems) => {
     try {
@@ -148,7 +158,11 @@ function App() {
   return (
     <div data-testid="app-root">
       {/* Header */}
-      <Header cartCount={cartCount} onCartClick={() => setCartOpen(true)} onSearch={setSearchQuery} />
+      <Header
+        cartCount={cartCount}
+        onCartClick={() => setCartOpen(true)}
+        onSearch={setSearchQuery}
+      />
 
       {/* Hero */}
       <Hero onShopNow={scrollToProducts} />
@@ -156,14 +170,21 @@ function App() {
       {/* Marquee Strip */}
       <div className="marquee-strip" aria-hidden="true">
         <div className="marquee-track">
-          {[...Array(2)].map((_, outerIdx) => (
-            ['Free Shipping on Orders ₹999+', 'New Season Collection Now Live', 'Complimentary Returns Within 30 Days', 'Sustainably Crafted', 'Express Delivery Available', 'Members Receive Early Access'].map((item, i) => (
+          {[...Array(2)].map((_, outerIdx) =>
+            [
+              'Free Shipping on Orders ₹999+',
+              'New Season Collection Now Live',
+              'Complimentary Returns Within 30 Days',
+              'Sustainably Crafted',
+              'Express Delivery Available',
+              'Members Receive Early Access',
+            ].map((item, i) => (
               <span key={`${outerIdx}-${i}`} className="marquee-item">
                 {item}
                 <span className="marquee-sep" />
               </span>
             ))
-          ))}
+          )}
         </div>
       </div>
 
@@ -205,8 +226,23 @@ function App() {
             {loading ? (
               Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)
             ) : sortedProducts.length === 0 ? (
-              <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '100px 20px', color: 'var(--clr-text-muted)' }}>
-                <p style={{ fontFamily: 'var(--font-serif)', fontSize: '28px', fontWeight: 400, marginBottom: '12px', color: 'var(--clr-ink)' }}>
+              <div
+                style={{
+                  gridColumn: '1/-1',
+                  textAlign: 'center',
+                  padding: '100px 20px',
+                  color: 'var(--clr-text-muted)',
+                }}
+              >
+                <p
+                  style={{
+                    fontFamily: 'var(--font-serif)',
+                    fontSize: '28px',
+                    fontWeight: 400,
+                    marginBottom: '12px',
+                    color: 'var(--clr-ink)',
+                  }}
+                >
                   No pieces found
                 </p>
                 <p style={{ fontSize: '14px', fontWeight: 300, letterSpacing: '0.3px' }}>
@@ -234,12 +270,15 @@ function App() {
           <div className="editorial-banner-content">
             <div className="section-label">Featured Collection</div>
             <h2 className="section-title">
-              The<br />
-              <em style={{ fontStyle: 'italic' }}>Quiet Luxury</em><br />
+              The
+              <br />
+              <em style={{ fontStyle: 'italic' }}>Quiet Luxury</em>
+              <br />
               Edit
             </h2>
             <p className="section-sub" style={{ marginTop: '20px' }}>
-              Refined pieces that speak through restraint — timeless silhouettes in understated palettes.
+              Refined pieces that speak through restraint — timeless silhouettes in understated
+              palettes.
             </p>
             <button
               className="btn btn-outline"
@@ -258,10 +297,12 @@ function App() {
           <div className="promo-banner" data-testid="promo-banner">
             <div>
               <h2 className="promo-title">
-                End of Season<br />Sale — Up to 40% Off
+                End of Season
+                <br />
+                Sale — Up to 40% Off
               </h2>
               <p className="promo-sub">
-                A curated selection, reduced. Shop before they're gone.
+                A curated selection, reduced. Shop before they&apos;re gone.
               </p>
             </div>
             <button className="btn btn-light" style={{ flexShrink: 0 }} onClick={scrollToProducts}>
@@ -331,7 +372,15 @@ function App() {
                 showToast('Welcome to Maison — you are now subscribed');
               }}
             >
-              <div style={{ fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase', color: 'var(--clr-text-muted)', marginBottom: '4px' }}>
+              <div
+                style={{
+                  fontSize: '10px',
+                  letterSpacing: '2px',
+                  textTransform: 'uppercase',
+                  color: 'var(--clr-text-muted)',
+                  marginBottom: '4px',
+                }}
+              >
                 Email Address
               </div>
               <input
@@ -341,7 +390,11 @@ function App() {
                 required
                 aria-label="Email for newsletter"
               />
-              <button type="submit" className="btn btn-primary" style={{ alignSelf: 'flex-start', marginTop: '8px', padding: '13px 32px' }}>
+              <button
+                type="submit"
+                className="btn btn-primary"
+                style={{ alignSelf: 'flex-start', marginTop: '8px', padding: '13px 32px' }}
+              >
                 Subscribe
               </button>
             </form>
@@ -365,13 +418,22 @@ function App() {
 
       {/* Checkout Modal */}
       {checkoutOpen && (
-        <CheckoutModal cart={cart} onClose={() => setCheckoutOpen(false)} onPlaceOrder={handlePlaceOrder} />
+        <CheckoutModal
+          cart={cart}
+          onClose={() => setCheckoutOpen(false)}
+          onPlaceOrder={handlePlaceOrder}
+        />
       )}
 
       {/* Toasts */}
       <div className="toast-container" aria-live="polite">
         {toasts.map((toast) => (
-          <Toast key={toast.id} message={toast.message} type={toast.type} onDismiss={() => dismissToast(toast.id)} />
+          <Toast
+            key={toast.id}
+            message={toast.message}
+            type={toast.type}
+            onDismiss={() => dismissToast(toast.id)}
+          />
         ))}
       </div>
 

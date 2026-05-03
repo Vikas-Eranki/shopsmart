@@ -5,7 +5,7 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
-  # ─── Frontend PR Checks ─────────────────────────────────────────────────────
+  #  Frontend PR Checks 
   frontend-pr-lint:
     name: "PR — Frontend Lint (ESLint)"
     runs-on: ubuntu-latest
@@ -55,7 +55,7 @@ jobs:
         working-directory: client
         run: npm run format:check
 
-  # ─── Backend PR Checks ──────────────────────────────────────────────────────
+  #  Backend PR Checks 
   backend-pr-lint:
     name: "PR — Backend Lint (ESLint)"
     runs-on: ubuntu-latest

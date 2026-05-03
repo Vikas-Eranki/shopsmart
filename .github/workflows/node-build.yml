@@ -1,4 +1,4 @@
-# ⚠️  DEPRECATED — This file has been split into:
+# ️  DEPRECATED — This file has been split into:
 #
 #   frontend.yml  — Frontend CI: lint, format-check, unit, integration, E2E, build
 #   backend.yml   — Backend CI:  lint, format-check, API tests (Jest + supertest)
@@ -14,7 +14,7 @@ on:
 
 jobs:
   deprecated-notice:
-    name: "⚠️ This workflow is deprecated"
+    name: "️ This workflow is deprecated"
     runs-on: ubuntu-latest
     steps:
       - name: Notice

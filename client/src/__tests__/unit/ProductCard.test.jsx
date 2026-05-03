@@ -74,7 +74,7 @@ describe('ProductCard — Unit Tests', () => {
   // Test 9
   it('shows discount percentage when originalPrice is higher than price', () => {
     render(<ProductCard product={SAMPLE_PRODUCT} />);
-    expect(screen.getByText(/20% off/)).toBeInTheDocument();
+    expect(screen.getByText(/−20%/)).toBeInTheDocument();
   });
 
   // Test 10

@@ -3,13 +3,13 @@ function Hero({ onShopNow }) {
     <section className="hero" data-testid="hero-section">
       {/* Left — Editorial Text */}
       <div className="hero-content slide-up">
-        <div className="hero-label">
-          SS 2026 Collection
-        </div>
+        <div className="hero-label">SS 2026 Collection</div>
 
         <h1 className="hero-title">
-          Dressed for<br />
-          <em>Those Who</em><br />
+          Dressed for
+          <br />
+          <em>Those Who</em>
+          <br />
           Notice
         </h1>
 
@@ -26,10 +26,7 @@ function Hero({ onShopNow }) {
           >
             Explore Collection
           </button>
-          <button
-            className="btn btn-outline"
-            style={{ padding: '15px 36px' }}
-          >
+          <button className="btn btn-outline" style={{ padding: '15px 36px' }}>
             Our Story
           </button>
         </div>

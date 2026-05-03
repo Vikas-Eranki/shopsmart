@@ -56,7 +56,7 @@ test.describe('ShopSmart E2E Tests', () => {
   // Test 1
   test('homepage loads with ShopSmart branding', async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('text=ShopSmart').first()).toBeVisible();
+    await expect(page.locator('text=Maison').first()).toBeVisible();
   });
 
   // Test 2
@@ -104,8 +104,8 @@ test.describe('ShopSmart E2E Tests', () => {
     await expect(page.getByTestId('cart-empty')).toBeVisible();
   });
 
-  // Test 8: Full user flow — browse → add to cart → open drawer → checkout
-  test('full flow: add to cart → open cart → proceed to checkout', async ({ page }) => {
+  // Test 8: Full user flow - browse, add to cart, open drawer, checkout
+  test('full flow: add to cart - open cart - proceed to checkout', async ({ page }) => {
     await page.goto('/');
     // Wait for products
     await expect(page.getByTestId('product-card').first()).toBeVisible({ timeout: 8000 });
@@ -122,7 +122,7 @@ test.describe('ShopSmart E2E Tests', () => {
   });
 
   // Test 9
-  test('checkout flow: cart review → shipping form', async ({ page }) => {
+  test('checkout flow: cart review - shipping form', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByTestId('product-card').first()).toBeVisible({ timeout: 8000 });
     await page.getByTestId('add-to-cart-btn').first().click();

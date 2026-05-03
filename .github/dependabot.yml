@@ -1,6 +1,6 @@
 version: 2
 updates:
-  # ─── Client (npm) ──────────────────────────────────────────────────────
+  # client npm dependency updates
   - package-ecosystem: "npm"
     directory: "/client"
     schedule:
@@ -16,7 +16,7 @@ updates:
     commit-message:
       prefix: "chore(client)"
 
-  # ─── Server (npm) ──────────────────────────────────────────────────────
+  # server npm dependency updates
   - package-ecosystem: "npm"
     directory: "/server"
     schedule:
@@ -32,7 +32,7 @@ updates:
     commit-message:
       prefix: "chore(server)"
 
-  # ─── GitHub Actions ────────────────────────────────────────────────────
+  # github actions dependency updates
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
