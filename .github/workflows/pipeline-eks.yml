@@ -1,0 +1,236 @@
+# pipeline-eks: deploys the backend to an EKS cluster using kubectl manifests
+name: "pipeline-eks"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "k8s/**"
+      - ".github/workflows/pipeline-eks.yml"
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Image tag to deploy (default: git SHA)"
+        required: false
+        default: ""
+
+env:
+  AWS_REGION:    ${{ secrets.AWS_REGION }}
+  EKS_CLUSTER:   shopsmart-eks-prod
+  K8S_NAMESPACE: shopsmart
+  ECR_REPO_NAME: shopsmart-backend-prod
+
+jobs:
+  # Applies all Kubernetes manifests and waits for the rollout to complete
+  deploy-eks:
+    name: "Deploy to EKS"
+    runs-on: ubuntu-latest
+
+    outputs:
+      image_tag: ${{ steps.meta.outputs.image_tag }}
+      endpoint:  ${{ steps.svc-endpoint.outputs.endpoint }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Determine image tag
+        id: meta
+        run: |
+          TAG="${{ github.event.inputs.image_tag }}"
+          if [ -z "$TAG" ]; then
+            TAG="${GITHUB_SHA::8}"
+          fi
+          echo "image_tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "IMAGE_TAG=${TAG}" >> "$GITHUB_ENV"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token:     ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region:            ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: "v1.29.0"
+
+      - name: Configure kubeconfig for EKS
+        run: |
+          aws eks update-kubeconfig \
+            --name "${{ env.EKS_CLUSTER }}" \
+            --region "${{ env.AWS_REGION }}"
+          kubectl cluster-info
+
+      # Creates the namespace if absent; dry-run apply is idempotent when it already exists
+      - name: Ensure namespace exists
+        run: |
+          kubectl create namespace "${{ env.K8S_NAMESPACE }}" \
+            --dry-run=client -o yaml \
+          | kubectl apply -f -
+
+      - name: Patch image in deployment manifest
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          IMAGE_URI="${ECR_REGISTRY}/${{ env.ECR_REPO_NAME }}:${IMAGE_TAG}"
+          echo "Deploying image: ${IMAGE_URI}"
+          sed -i "s|PLACEHOLDER_ECR_URL:PLACEHOLDER_TAG|${IMAGE_URI}|g" k8s/deployment.yaml
+          grep "image:" k8s/deployment.yaml
+
+      # Manifests already declare namespace: shopsmart so no -n flag is needed here
+      - name: Apply Kubernetes manifests
+        run: |
+          kubectl apply -f k8s/deployment.yaml
+          kubectl apply -f k8s/service.yaml
+          kubectl apply -f k8s/hpa.yaml
+
+      - name: Wait for deployment rollout
+        run: |
+          kubectl rollout status deployment/shopsmart-backend \
+            -n "${{ env.K8S_NAMESPACE }}" \
+            --timeout=5m
+
+      - name: Verify minimum replica count
+        run: |
+          READY=$(kubectl get deployment shopsmart-backend \
+            -n "${{ env.K8S_NAMESPACE }}" \
+            -o jsonpath='{.status.readyReplicas}')
+          READY="${READY:-0}"
+          echo "Ready replicas: ${READY}"
+          if [ "$READY" -lt 2 ]; then
+            echo "Less than 2 replicas ready (got ${READY})"
+            exit 1
+          fi
+
+      - name: Get service endpoint
+        id: svc-endpoint
+        run: |
+          kubectl get svc -n "${{ env.K8S_NAMESPACE }}"
+
+          ENDPOINT=""
+          for i in $(seq 1 6); do
+            HOSTNAME=$(kubectl get ingress shopsmart-ingress \
+              -n "${{ env.K8S_NAMESPACE }}" \
+              -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' \
+              2>/dev/null || true)
+            if [ -n "$HOSTNAME" ]; then
+              ENDPOINT="$HOSTNAME"
+              echo "endpoint=${ENDPOINT}" >> "$GITHUB_OUTPUT"
+              echo "ENDPOINT=${ENDPOINT}" >> "$GITHUB_ENV"
+              break
+            fi
+            echo "Waiting for ingress hostname (attempt ${i}/6)"
+            sleep 20
+          done
+
+          if [ -z "$ENDPOINT" ]; then
+            echo "Ingress hostname not yet assigned."
+            echo "endpoint=" >> "$GITHUB_OUTPUT"
+            echo "ENDPOINT=" >> "$GITHUB_ENV"
+          fi
+
+      - name: Write job summary
+        run: |
+          {
+            echo "## EKS Deployment"
+            echo "| Key | Value |"
+            echo "|-----|-------|"
+            echo "| Cluster   | \`${{ env.EKS_CLUSTER }}\` |"
+            echo "| Namespace | \`${{ env.K8S_NAMESPACE }}\` |"
+            echo "| Image Tag | \`${IMAGE_TAG}\` |"
+            echo "| Endpoint  | \`${ENDPOINT}\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # Checks pod status, replica count, and probe configuration after deployment
+  verify-eks:
+    name: "Verify EKS Stability"
+    runs-on: ubuntu-latest
+    needs: deploy-eks
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token:     ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region:            ${{ secrets.AWS_REGION }}
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: "v1.29.0"
+
+      - name: Configure kubeconfig for EKS
+        run: |
+          aws eks update-kubeconfig \
+            --name "${{ env.EKS_CLUSTER }}" \
+            --region "${{ env.AWS_REGION }}"
+
+      - name: Describe pods
+        run: |
+          kubectl get pods \
+            -n "${{ env.K8S_NAMESPACE }}" \
+            -l app=shopsmart-backend \
+            -o wide
+
+      - name: Check pod readiness
+        run: |
+          TOTAL=$(kubectl get pods \
+            -n "${{ env.K8S_NAMESPACE }}" \
+            -l app=shopsmart-backend \
+            --no-headers 2>/dev/null | wc -l | tr -d ' ')
+
+          RUNNING=$(kubectl get pods \
+            -n "${{ env.K8S_NAMESPACE }}" \
+            -l app=shopsmart-backend \
+            --no-headers 2>/dev/null \
+            | grep -c "Running" || true)
+
+          NOT_READY=$(( TOTAL - RUNNING ))
+          echo "Total: ${TOTAL} | Running: ${RUNNING} | Not ready: ${NOT_READY}"
+
+          if [ "$NOT_READY" -gt 0 ]; then
+            echo "${NOT_READY} pod(s) are not in Running state"
+            kubectl describe pods \
+              -n "${{ env.K8S_NAMESPACE }}" \
+              -l app=shopsmart-backend
+            exit 1
+          fi
+
+      - name: Verify probes configured
+        run: |
+          LIVENESS=$(kubectl get deployment shopsmart-backend \
+            -n "${{ env.K8S_NAMESPACE }}" \
+            -o jsonpath='{.spec.template.spec.containers[0].livenessProbe}')
+          if echo "$LIVENESS" | grep -q "httpGet"; then
+            echo "Liveness probe configured"
+          else
+            echo "WARNING: Liveness probe missing or not using httpGet"
+          fi
+
+          READINESS=$(kubectl get deployment shopsmart-backend \
+            -n "${{ env.K8S_NAMESPACE }}" \
+            -o jsonpath='{.spec.template.spec.containers[0].readinessProbe}')
+          if echo "$READINESS" | grep -q "httpGet"; then
+            echo "Readiness probe configured"
+          else
+            echo "WARNING: Readiness probe missing or not using httpGet"
+          fi
+
+      - name: Write job summary
+        run: |
+          K8S_RESOURCES=$(kubectl get all -n "${{ env.K8S_NAMESPACE }}" 2>/dev/null || echo "Could not retrieve resources")
+          {
+            echo "## EKS Deployment Verified"
+            echo ""
+            echo "\`\`\`"
+            echo "$K8S_RESOURCES"
+            echo "\`\`\`"
+          } >> "$GITHUB_STEP_SUMMARY"
