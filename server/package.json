@@ -25,12 +25,15 @@
     },
     "reporters": [
       "default",
-      ["jest-junit", {
-        "outputDirectory": "./test-reports",
-        "outputName": "backend-junit.xml",
-        "classNameTemplate": "{classname}",
-        "titleTemplate": "{title}"
-      }]
+      [
+        "jest-junit",
+        {
+          "outputDirectory": "./test-reports",
+          "outputName": "backend-junit.xml",
+          "classNameTemplate": "{classname}",
+          "titleTemplate": "{title}"
+        }
+      ]
     ]
   },
   "dependencies": {
