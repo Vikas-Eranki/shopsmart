@@ -25,8 +25,9 @@ const FASHION_IMAGES = [
 ];
 
 function ProductCard({ product, onAddToCart }) {
-  if (!product) return null;
   const [wishlisted, setWishlisted] = useState(false);
+
+  if (!product) return null;
 
   const discount = product.originalPrice
     ? Math.round((1 - product.price / product.originalPrice) * 100)
@@ -34,14 +35,20 @@ function ProductCard({ product, onAddToCart }) {
 
   const getBadgeClass = (badge) => {
     if (!badge) return 'badge-accent';
-    const map = { 'Best Seller': 'badge-accent', Hot: 'badge-danger', New: 'badge-success', Sale: 'badge-warning' };
+    const map = {
+      'Best Seller': 'badge-accent',
+      Hot: 'badge-danger',
+      New: 'badge-success',
+      Sale: 'badge-warning',
+    };
     return map[badge] || 'badge-accent';
   };
 
   // Use a deterministic fashion image based on product id if no image provided
-  const imgSrc = product.image && product.image.startsWith('http')
-    ? product.image
-    : FASHION_IMAGES[(product.id - 1) % FASHION_IMAGES.length];
+  const imgSrc =
+    product.image && product.image.startsWith('http')
+      ? product.image
+      : FASHION_IMAGES[(product.id - 1) % FASHION_IMAGES.length];
 
   return (
     <div className="product-card" data-testid="product-card">
@@ -96,9 +103,7 @@ function ProductCard({ product, onAddToCart }) {
           {product.originalPrice && (
             <span className="product-original-price">{formatPrice(product.originalPrice)}</span>
           )}
-          {discount > 0 && (
-            <span className="product-discount">−{discount}%</span>
-          )}
+          {discount > 0 && <span className="product-discount">−{discount}%</span>}
         </div>
 
         <button
