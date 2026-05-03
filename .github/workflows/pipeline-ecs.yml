@@ -114,18 +114,58 @@ jobs:
         run: |
           echo "ECR_IMAGE=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPO_NAME }}:${{ needs.build-and-push.outputs.image_tag }}" >> "$GITHUB_ENV"
 
-      - name: Download current ECS task definition
+      - name: Download or create ECS task definition
         run: |
+          # Try to download the existing task definition
           aws ecs describe-task-definition \
             --task-definition "shopsmart-backend-prod" \
             --query "taskDefinition" \
-            --output json \
+            --output json 2>/dev/null \
           | jq 'del(
               .taskDefinitionArn, .revision, .status,
               .requiresAttributes, .compatibilities,
               .registeredAt, .registeredBy
-            )' \
-          > task-def.json
+            )' > task-def.json || true
+
+          # If task definition doesn't exist yet, create a minimal one from scratch
+          if [ ! -s task-def.json ] || ! jq -e . task-def.json > /dev/null 2>&1; then
+            echo "Task definition not found — creating a new one."
+            EXEC_ROLE=$(aws iam get-role \
+              --role-name "shopsmart-ecs-exec-role-prod" \
+              --query "Role.Arn" --output text)
+            cat > task-def.json << EOF
+          {
+            "family": "shopsmart-backend-prod",
+            "executionRoleArn": "${EXEC_ROLE}",
+            "networkMode": "awsvpc",
+            "requiresCompatibilities": ["FARGATE"],
+            "cpu": "256",
+            "memory": "512",
+            "containerDefinitions": [{
+              "name": "${{ env.CONTAINER_NAME }}",
+              "image": "${ECR_IMAGE}",
+              "essential": true,
+              "portMappings": [{"containerPort": 5001, "hostPort": 5001, "protocol": "tcp"}],
+              "environment": [
+                {"name": "NODE_ENV", "value": "production"},
+                {"name": "PORT", "value": "5001"}
+              ],
+              "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                  "awslogs-group": "/ecs/shopsmart-prod",
+                  "awslogs-region": "${{ env.AWS_REGION }}",
+                  "awslogs-stream-prefix": "ecs"
+                }
+              },
+              "healthCheck": {
+                "command": ["CMD-SHELL", "wget -qO- http://localhost:5001/api/health || exit 1"],
+                "interval": 30, "timeout": 5, "retries": 3, "startPeriod": 15
+              }
+            }]
+          }
+          EOF
+          fi
 
       - name: Render updated ECS task definition
         id: render-td
