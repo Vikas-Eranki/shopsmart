@@ -56,7 +56,7 @@ test.describe('ShopSmart E2E Tests', () => {
   // Test 1
   test('homepage loads with ShopSmart branding', async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('text=ShopSmart').first()).toBeVisible();
+    await expect(page.locator('text=Maison').first()).toBeVisible();
   });
 
   // Test 2
