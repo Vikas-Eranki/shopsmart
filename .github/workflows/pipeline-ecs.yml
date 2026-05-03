@@ -177,14 +177,54 @@ jobs:
           container-name:  ${{ env.CONTAINER_NAME }}
           image:           ${{ env.ECR_IMAGE }}
 
-      # Waits until the rolling deployment reaches a stable state before continuing
       - name: Deploy to ECS Fargate
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-        with:
-          cluster:         ${{ env.ECS_CLUSTER }}
-          service:         ${{ env.ECS_SERVICE }}
-          task-definition: ${{ steps.render-td.outputs.task-definition }}
-          wait-for-service-stability: true
+        run: |
+          # Register the updated task definition
+          TD_ARN=$(aws ecs register-task-definition \
+            --cli-input-json file://${{ steps.render-td.outputs.task-definition }} \
+            --query "taskDefinition.taskDefinitionArn" --output text)
+          echo "Registered task definition: ${TD_ARN}"
+
+          # Create ECS cluster if it doesn't exist
+          aws ecs create-cluster --cluster-name "${{ env.ECS_CLUSTER }}" 2>/dev/null || true
+
+          # Check if service exists
+          SVC_STATUS=$(aws ecs describe-services \
+            --cluster "${{ env.ECS_CLUSTER }}" \
+            --services "${{ env.ECS_SERVICE }}" \
+            --query "services[?status=='ACTIVE'].status" \
+            --output text 2>/dev/null || true)
+
+          if [ -z "$SVC_STATUS" ]; then
+            echo "Service not found — creating it."
+            # Get default VPC subnets and security group
+            SUBNETS=$(aws ec2 describe-subnets \
+              --filters "Name=defaultForAz,Values=true" \
+              --query "Subnets[].SubnetId" \
+              --output text | tr '\t' ',')
+            SG=$(aws ec2 describe-security-groups \
+              --filters "Name=group-name,Values=default" \
+              --query "SecurityGroups[0].GroupId" \
+              --output text)
+            aws ecs create-service \
+              --cluster "${{ env.ECS_CLUSTER }}" \
+              --service-name "${{ env.ECS_SERVICE }}" \
+              --task-definition "${TD_ARN}" \
+              --desired-count 1 \
+              --launch-type FARGATE \
+              --network-configuration "awsvpcConfiguration={subnets=[${SUBNETS}],securityGroups=[${SG}],assignPublicIp=ENABLED}"
+          else
+            echo "Service exists — updating with new task definition."
+            aws ecs update-service \
+              --cluster "${{ env.ECS_CLUSTER }}" \
+              --service "${{ env.ECS_SERVICE }}" \
+              --task-definition "${TD_ARN}"
+          fi
+
+          # Wait for service to stabilize
+          aws ecs wait services-stable \
+            --cluster "${{ env.ECS_CLUSTER }}" \
+            --services "${{ env.ECS_SERVICE }}"
 
       - name: Write job summary
         run: |
