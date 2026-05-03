@@ -197,15 +197,19 @@ jobs:
 
           if [ -z "$SVC_STATUS" ]; then
             echo "Service not found — creating it."
-            # Get default VPC subnets and security group
+            # Get default VPC ID first, then fetch subnets and SG from the same VPC
+            VPC_ID=$(aws ec2 describe-vpcs \
+              --filters "Name=isDefault,Values=true" \
+              --query "Vpcs[0].VpcId" --output text)
             SUBNETS=$(aws ec2 describe-subnets \
-              --filters "Name=defaultForAz,Values=true" \
+              --filters "Name=vpc-id,Values=${VPC_ID}" "Name=defaultForAz,Values=true" \
               --query "Subnets[].SubnetId" \
               --output text | tr '\t' ',')
             SG=$(aws ec2 describe-security-groups \
-              --filters "Name=group-name,Values=default" \
+              --filters "Name=vpc-id,Values=${VPC_ID}" "Name=group-name,Values=default" \
               --query "SecurityGroups[0].GroupId" \
               --output text)
+            echo "VPC: ${VPC_ID} | Subnets: ${SUBNETS} | SG: ${SG}"
             aws ecs create-service \
               --cluster "${{ env.ECS_CLUSTER }}" \
               --service-name "${{ env.ECS_SERVICE }}" \
