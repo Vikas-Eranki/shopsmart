@@ -44,11 +44,10 @@ function ProductCard({ product, onAddToCart }) {
     return map[badge] || 'badge-accent';
   };
 
-  // Use a deterministic fashion image based on product id if no image provided
-  const imgSrc =
-    product.image && product.image.startsWith('http')
-      ? product.image
-      : FASHION_IMAGES[(product.id - 1) % FASHION_IMAGES.length];
+  // Use the product image if provided (any URL or path), otherwise pick a deterministic fallback
+  const imgSrc = product.image
+    ? product.image
+    : FASHION_IMAGES[(product.id - 1) % FASHION_IMAGES.length];
 
   return (
     <div className="product-card" data-testid="product-card">
