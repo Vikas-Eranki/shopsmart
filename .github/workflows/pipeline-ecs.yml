@@ -130,9 +130,11 @@ jobs:
           # If task definition doesn't exist yet, create a minimal one from scratch
           if [ ! -s task-def.json ] || ! jq -e . task-def.json > /dev/null 2>&1; then
             echo "Task definition not found — creating a new one."
-            EXEC_ROLE=$(aws iam get-role \
-              --role-name "shopsmart-ecs-exec-role-prod" \
-              --query "Role.Arn" --output text)
+            ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+            # Use LabRole (AWS Academy) or the custom role if it exists
+            EXEC_ROLE=$(aws iam get-role --role-name "shopsmart-ecs-exec-role-prod" \
+              --query "Role.Arn" --output text 2>/dev/null || \
+              echo "arn:aws:iam::${ACCOUNT_ID}:role/LabRole")
             cat > task-def.json << EOF
           {
             "family": "shopsmart-backend-prod",
