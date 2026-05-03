@@ -1,59 +1,11 @@
 # EKS module: IAM roles, security groups, EKS cluster, and managed node group
 
-data "aws_iam_policy_document" "eks_cluster_assume" {
-  statement {
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "Service"
-      identifiers = ["eks.amazonaws.com"]
-    }
-  }
+# AWS Academy: use the pre-existing LabRole instead of creating custom IAM roles
+data "aws_iam_role" "lab_role" {
+  name = "LabRole"
 }
 
-resource "aws_iam_role" "eks_cluster" {
-  name               = "shopsmart-eks-cluster-role-${var.environment}"
-  assume_role_policy = data.aws_iam_policy_document.eks_cluster_assume.json
-}
 
-resource "aws_iam_role_policy_attachment" "eks_cluster_policy" {
-  role       = aws_iam_role.eks_cluster.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
-}
-
-resource "aws_iam_role_policy_attachment" "eks_vpc_resource_controller" {
-  role       = aws_iam_role.eks_cluster.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSVPCResourceController"
-}
-
-data "aws_iam_policy_document" "eks_node_assume" {
-  statement {
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "Service"
-      identifiers = ["ec2.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "eks_node" {
-  name               = "shopsmart-eks-node-role-${var.environment}"
-  assume_role_policy = data.aws_iam_policy_document.eks_node_assume.json
-}
-
-resource "aws_iam_role_policy_attachment" "eks_node_policy" {
-  role       = aws_iam_role.eks_node.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
-}
-
-resource "aws_iam_role_policy_attachment" "eks_cni_policy" {
-  role       = aws_iam_role.eks_node.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
-}
-
-resource "aws_iam_role_policy_attachment" "eks_ecr_readonly" {
-  role       = aws_iam_role.eks_node.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
-}
 
 resource "aws_security_group" "eks_cluster" {
   name        = "shopsmart-eks-cluster-sg-${var.environment}"
@@ -113,7 +65,7 @@ resource "aws_security_group" "eks_nodes" {
 
 resource "aws_eks_cluster" "this" {
   name     = "shopsmart-eks-${var.environment}"
-  role_arn = aws_iam_role.eks_cluster.arn
+  role_arn = data.aws_iam_role.lab_role.arn
   version  = var.cluster_version
 
   vpc_config {
@@ -126,16 +78,13 @@ resource "aws_eks_cluster" "this" {
 
   enabled_cluster_log_types = ["api", "audit", "authenticator"]
 
-  depends_on = [
-    aws_iam_role_policy_attachment.eks_cluster_policy,
-    aws_iam_role_policy_attachment.eks_vpc_resource_controller,
-  ]
+  depends_on = []
 }
 
 resource "aws_eks_node_group" "this" {
   cluster_name    = aws_eks_cluster.this.name
   node_group_name = "shopsmart-nodes-${var.environment}"
-  node_role_arn   = aws_iam_role.eks_node.arn
+  node_role_arn   = data.aws_iam_role.lab_role.arn
 
   # Nodes run in private subnets and reach the internet via NAT
   subnet_ids     = var.private_subnet_ids
@@ -158,11 +107,7 @@ resource "aws_eks_node_group" "this" {
     environment = var.environment
   }
 
-  depends_on = [
-    aws_iam_role_policy_attachment.eks_node_policy,
-    aws_iam_role_policy_attachment.eks_cni_policy,
-    aws_iam_role_policy_attachment.eks_ecr_readonly,
-  ]
+  depends_on = []
 
   # desired_size is managed by the cluster autoscaler after initial creation
   lifecycle {

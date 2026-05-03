@@ -1,49 +1,10 @@
 # ECS module: IAM roles, security groups, ALB, ECS cluster, task definition, and Fargate service
 
-data "aws_iam_policy_document" "ecs_assume_role" {
-  statement {
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "Service"
-      identifiers = ["ecs-tasks.amazonaws.com"]
-    }
-  }
+# AWS Academy: use the pre-existing LabRole instead of creating custom IAM roles
+data "aws_iam_role" "lab_role" {
+  name = "LabRole"
 }
 
-resource "aws_iam_role" "ecs_task_execution" {
-  name               = "shopsmart-ecs-exec-role-${var.environment}"
-  assume_role_policy = data.aws_iam_policy_document.ecs_assume_role.json
-}
-
-resource "aws_iam_role_policy_attachment" "ecs_task_execution_managed" {
-  role       = aws_iam_role.ecs_task_execution.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
-}
-
-# Allows ECS to pull images from ECR and write logs to CloudWatch
-resource "aws_iam_role_policy" "ecs_task_execution_extra" {
-  name = "shopsmart-ecs-exec-extra-${var.environment}"
-  role = aws_iam_role.ecs_task_execution.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "ecr:GetAuthorizationToken",
-          "ecr:BatchCheckLayerAvailability",
-          "ecr:GetDownloadUrlForLayer",
-          "ecr:BatchGetImage",
-          "logs:CreateLogGroup",
-          "logs:CreateLogStream",
-          "logs:PutLogEvents"
-        ]
-        Resource = "*"
-      }
-    ]
-  })
-}
 
 resource "aws_cloudwatch_log_group" "ecs" {
   name              = "/ecs/shopsmart-${var.environment}"
@@ -161,7 +122,7 @@ resource "aws_ecs_task_definition" "this" {
   network_mode             = "awsvpc"
   cpu                      = var.task_cpu
   memory                   = var.task_memory
-  execution_role_arn       = aws_iam_role.ecs_task_execution.arn
+  execution_role_arn       = data.aws_iam_role.lab_role.arn
 
   container_definitions = jsonencode([
     {
@@ -233,7 +194,6 @@ resource "aws_ecs_service" "this" {
 
   depends_on = [
     aws_lb_listener.http,
-    aws_iam_role_policy_attachment.ecs_task_execution_managed
   ]
 
   # task_definition and desired_count are managed by CI/CD after initial creation
