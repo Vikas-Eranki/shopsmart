@@ -86,8 +86,8 @@ resource "aws_eks_node_group" "this" {
   node_group_name = "shopsmart-nodes-${var.environment}"
   node_role_arn   = data.aws_iam_role.lab_role.arn
 
-  # Nodes run in private subnets and reach the internet via NAT
-  subnet_ids     = var.private_subnet_ids
+  # AWS Academy has no NAT gateway — use public subnets so nodes can pull AMIs
+  subnet_ids     = var.public_subnet_ids
   instance_types = [var.node_instance_type]
 
   scaling_config {
